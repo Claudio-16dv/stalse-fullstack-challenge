@@ -1,0 +1,46 @@
+{
+  "id": "ticketEventsWf001",
+  "name": "Mini Inbox - Ticket Events",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "ticket-events",
+        "options": {}
+      },
+      "id": "2f0f6f0e-6a4d-4a53-9a2e-5d0d3f6a1b01",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [0, 0],
+      "webhookId": "7c1d9a52-3b0e-4f6b-8e5a-1a2b3c4d5e01"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { event, ticket } = $input.first().json.body;\n\nconst message = `[${event}] Ticket #${ticket.id} \"${ticket.subject}\" de ${ticket.customer_name} | status=${ticket.status} | priority=${ticket.priority}`;\n\nconsole.log(message);\n\nreturn [{ json: { event, ticket_id: ticket.id, message } }];"
+      },
+      "id": "5a8e1c34-9d2b-4c7e-b1f3-6e7a8b9c0d02",
+      "name": "Registrar evento",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [220, 0]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Registrar evento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {}
+}

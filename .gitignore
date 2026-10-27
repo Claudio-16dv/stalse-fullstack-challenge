@@ -1,0 +1,14 @@
+.env
+.DS_Store
+.idea/
+.vscode/
+
+__pycache__/
+*.pyc
+.venv/
+
+backend/*.sqlite
+backend/*.db
+
+data/raw/*
+!data/raw/.gitkeep
