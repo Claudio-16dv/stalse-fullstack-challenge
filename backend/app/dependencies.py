@@ -15,7 +15,7 @@ def get_ticket_service(settings: SettingsDep) -> TicketService:
 
 
 def get_webhook_notifier(settings: SettingsDep) -> WebhookNotifier:
-    return WebhookNotifier(settings.n8n_webhook_url, settings.webhook_timeout_seconds)
+    return WebhookNotifier(settings.ticket_webhook_url, settings.webhook_timeout_seconds)
 
 
 TicketServiceDep = Annotated[TicketService, Depends(get_ticket_service)]

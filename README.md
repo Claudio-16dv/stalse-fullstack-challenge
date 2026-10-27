@@ -9,23 +9,51 @@ Mini sistema de tickets de suporte: API em FastAPI com SQLite, interface em Next
 - Dados: pandas
 - Automação: n8n 2.44.6
 
+## Primeiros passos
+
+Valem para os dois modos, com ou sem Docker.
+
+### 1. Instalar o Git
+
+Ubuntu/Debian:
+
+```bash
+sudo apt update
+sudo apt install -y git
+```
+
+macOS (com [Homebrew](https://brew.sh)): `brew install git`
+
+Windows (PowerShell): `winget install Git.Git`
+
+### 2. Clonar o projeto
+
+```bash
+git clone https://github.com/Claudio-16dv/stalse-fullstack-challenge.git
+cd stalse-fullstack-challenge
+```
+
+### 3. Criar o `.env`
+
+O `.env` fica fora do Git, então ele é criado a partir do exemplo:
+
+```bash
+cp .env.example .env
+```
+
+No Windows (PowerShell): `Copy-Item .env.example .env`
+
+Depois escolha um dos modos abaixo: [com Docker](#como-rodar-com-docker) ou [sem Docker](#como-rodar-sem-docker).
+
 ## Como rodar com Docker
 
-Requisito: Docker com Compose. Para rodar sem Docker, veja a [próxima seção](#como-rodar-sem-docker).
+Requisito: [Docker](https://docs.docker.com/get-docker/) com Compose.
 
-1. Crie o `.env` a partir do exemplo (o `.env` fica fora do Git):
+Na raiz do projeto:
 
-   ```bash
-   cp .env.example .env
-   ```
-
-   No Windows (PowerShell): `Copy-Item .env.example .env`
-
-2. Suba os serviços:
-
-   ```bash
-   docker compose up --build
-   ```
+```bash
+docker compose up --build
+```
 
 | Serviço | URL |
 |---|---|
@@ -43,17 +71,16 @@ Na primeira subida:
 
 ## Como rodar sem Docker
 
-Passo a passo partindo de uma máquina sem nada instalado. São três terminais abertos ao mesmo tempo: backend, n8n e frontend. Neste modo o `.env` não é usado, os valores padrão já apontam para `localhost`.
+Depois dos [primeiros passos](#primeiros-passos). São três terminais abertos ao mesmo tempo: backend, n8n e frontend. Neste modo os valores padrão já apontam para `localhost`, então não é preciso editar o `.env`.
 
-### 1. Instalar as ferramentas
+### 1. Instalar Python e Node.js
 
-É preciso ter Git, Python 3.12 e Node.js 22 ou 24.
+É preciso ter Python 3.12 e Node.js 22 ou 24.
 
 Ubuntu/Debian:
 
 ```bash
-sudo apt update
-sudo apt install -y git curl unzip python3 python3-venv python3-pip
+sudo apt install -y curl unzip python3 python3-venv python3-pip
 curl -fsSL https://deb.nodesource.com/setup_22.x | sudo -E bash -
 sudo apt install -y nodejs
 ```
@@ -61,38 +88,32 @@ sudo apt install -y nodejs
 macOS (com [Homebrew](https://brew.sh)):
 
 ```bash
-brew install git python@3.12 node@22
+brew install python@3.12 node@22
 ```
 
 Windows (PowerShell):
 
 ```powershell
-winget install Git.Git Python.Python.3.12 OpenJS.NodeJS.LTS
+winget install Python.Python.3.12 OpenJS.NodeJS.LTS
 ```
 
 Feche e abra o terminal depois de instalar, e confira:
 
 ```bash
-git --version
 python3 --version   # no Windows: python --version
 node --version
 ```
 
-### 2. Baixar o projeto
+### 2. Backend (terminal 1)
 
-```bash
-git clone https://github.com/Claudio-16dv/stalse-fullstack-challenge.git
-cd stalse-fullstack-challenge
-```
-
-### 3. Backend (terminal 1)
+Na raiz do projeto:
 
 ```bash
 cd backend
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-N8N_WEBHOOK_URL=http://localhost:5678/webhook/ticket-events uvicorn main:app --reload
+uvicorn main:app --reload
 ```
 
 No Windows (PowerShell), dentro de `backend`:
@@ -101,13 +122,12 @@ No Windows (PowerShell), dentro de `backend`:
 python -m venv .venv
 .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-$env:N8N_WEBHOOK_URL="http://localhost:5678/webhook/ticket-events"
 uvicorn main:app --reload
 ```
 
-A API sobe em http://localhost:8000. Na primeira vez ela cria o `backend/db.sqlite` com os 20 tickets do seed. Sem a variável `N8N_WEBHOOK_URL` tudo funciona, só o webhook não é enviado.
+A API sobe em http://localhost:8000. Na primeira vez ela cria o `backend/db.sqlite` com os 20 tickets do seed. O webhook é enviado para o n8n em `http://localhost:5678`. Se o n8n não estiver no ar, a API continua funcionando e só registra um aviso no log.
 
-### 4. n8n (terminal 2)
+### 3. n8n (terminal 2)
 
 Na raiz do projeto, importe e publique o workflow, depois inicie o n8n. Na primeira execução o `npx` baixa o n8n, o que leva alguns minutos.
 
@@ -119,7 +139,7 @@ npx -y n8n@2.44.6 start
 
 O n8n abre em http://localhost:5678. O import e o publish só precisam ser feitos uma vez. Nas próximas vezes basta o `start`.
 
-### 5. Frontend (terminal 3)
+### 4. Frontend (terminal 3)
 
 Na raiz do projeto:
 
@@ -131,11 +151,11 @@ npm run dev
 
 Acesse http://localhost:3000. O frontend chama a API em `http://localhost:8000` por padrão. Se a porta 3000 estiver ocupada, use `npm run dev -- --port 3001`.
 
-### 6. Testar o webhook
+### 5. Testar o webhook
 
 Abra um ticket na interface e clique em "Fechado" ou "Alta". No n8n, a execução aparece em Overview > Mini Inbox - Ticket Events > Executions.
 
-### 7. ETL (opcional)
+### 6. ETL (opcional)
 
 O `metrics.json` já vem no repositório. Para gerá-lo de novo, a partir da raiz do projeto:
 
@@ -191,7 +211,7 @@ curl -X PATCH http://localhost:8000/tickets/1 \
 
 ## Webhook (n8n)
 
-Quando um `PATCH` faz o ticket passar a `status=closed` ou `priority=high`, o backend envia um `POST` para `N8N_WEBHOOK_URL` (padrão `http://n8n:5678/webhook/ticket-events`).
+Quando um `PATCH` faz o ticket passar a `status=closed` ou `priority=high`, o backend envia um `POST` para `TICKET_WEBHOOK_URL` (`http://n8n:5678/webhook/ticket-events` no Docker e `http://localhost:5678/webhook/ticket-events` sem Docker).
 
 O envio só acontece quando o valor muda. Fechar um ticket que já estava fechado não dispara nada. Se o `PATCH` fizer as duas mudanças ao mesmo tempo, são enviados dois eventos. A chamada roda em background com timeout de 3 segundos, então uma falha no n8n não afeta a resposta da API.
 

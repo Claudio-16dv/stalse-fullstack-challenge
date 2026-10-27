@@ -9,7 +9,7 @@ class Settings:
     seeds_path: str
     metrics_path: str
     cors_origins: list[str]
-    n8n_webhook_url: str
+    ticket_webhook_url: str
     webhook_timeout_seconds: float
 
 
@@ -20,6 +20,6 @@ def get_settings() -> Settings:
         seeds_path=os.getenv("SEEDS_PATH", "seeds/tickets.json"),
         metrics_path=os.getenv("METRICS_PATH", "../data/processed/metrics.json"),
         cors_origins=os.getenv("CORS_ORIGINS", "http://localhost:3000").split(","),
-        n8n_webhook_url=os.getenv("N8N_WEBHOOK_URL", ""),
+        ticket_webhook_url=os.getenv("TICKET_WEBHOOK_URL", "http://localhost:5678/webhook/ticket-events"),
         webhook_timeout_seconds=float(os.getenv("WEBHOOK_TIMEOUT_SECONDS", "3")),
     )
